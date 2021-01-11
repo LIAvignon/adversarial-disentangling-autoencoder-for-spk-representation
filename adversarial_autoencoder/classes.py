@@ -21,24 +21,6 @@ m0              = 0.18212125        # Two values of the categorical distribution
 m1              = 0.69516705        #
 
 
-#def readMat(ar):
-#    fh = open(ar)
-#    x = []
-#    for line in fh.readlines():
-#        y = [float(value) for value in line.split()]
-#        x.append(y)
-#    fh.close()
-#    return x
-
-#def readListFloat(ar):
-#    fh = open(ar)
-#    x = []
-#    for line in fh.readlines():
-#        y = [float(value) for value in line.split()]
-#        x.append(y[0])
-#    fh.close()
-#    return x
-
 class Dataset(data.Dataset):
 
     def __init__(self, list_IDs, labels, data_file, prob_file):

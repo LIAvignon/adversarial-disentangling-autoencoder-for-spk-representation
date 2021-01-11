@@ -32,7 +32,6 @@ if __name__=="__main__":
     parser.add_argument('att_labels_txt',help="Txt file containing all the spk id and the corresponding att label", type=str)
     args = parser.parse_args()
 
-    #list_tr_id      = readListStrFile(args.list_tr_id)
     data_file       = args.xvectors
     prob_file       = args.postprob
 

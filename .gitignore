@@ -1,0 +1,5 @@
+*.pyc
+data/v1d/*
+data/v1t/*
+data/v2d/*
+data/v2t/*

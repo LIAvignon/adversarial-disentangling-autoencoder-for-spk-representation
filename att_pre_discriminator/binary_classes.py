@@ -8,15 +8,6 @@ import torch.nn.functional as F
 from torch.utils import data
 
 
-#def readMat(ar):
-#    fh = open(ar)
-#    x = []
-#    for line in fh.readlines():
-#        y = [float(value) for value in line.split()]
-#        x.append(y)
-#    fh.close()
-#    return x
-
 class Dataset(data.Dataset):
 
     def __init__(self, list_IDs, labels, data_file):
