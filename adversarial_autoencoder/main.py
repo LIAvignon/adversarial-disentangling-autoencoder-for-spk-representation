@@ -30,6 +30,8 @@ if __name__=="__main__":
     parser.add_argument('postprob', help="porsterior probabilities file", type=str)
     parser.add_argument('list_utt_id',help="list file of the utterances ID", type=str)
     parser.add_argument('att_labels_txt',help="Txt file containing all the spk id and the corresponding att label", type=str)
+    parser.add_argument("-t", "--test", help="Testing forward",action="store_true")
+    parser.add_argument('-w', dest='w', type=str, nargs=1, default='sr', help='Transformation option for testing: w value. Default is sr for soft-reconstruction')   
     args = parser.parse_args()
 
     data_file       = args.xvectors
@@ -38,7 +40,6 @@ if __name__=="__main__":
     list_utt_id     = list(np.loadtxt(args.list_utt_id, dtype='str'))
     att_labels_txt  = args.att_labels_txt
     name_exp        = args.name_exp
-    #lmax            = args.lmax
 
     #create output folder
     if not os.path.isdir(name_exp):os.mkdir(name_exp)
@@ -59,14 +60,14 @@ if __name__=="__main__":
     #Generators
     training_set = Dataset(partition['train'], labels, data_file, prob_file)
 
-    training_generator      = data.DataLoader(training_set, **params)
+    generator      = data.DataLoader(training_set, **params)
 
     # Layer dimension
     input_dim   = 512
     latent_dim  = 128
 
     input_dim_discrim   = latent_dim
-    hidden_dim_discrim  = 64
+    hidden_dim_discrim  = 128
 
     model_ae       = Autoencoder(input_dim, latent_dim)
     optimizer_ae   = torch.optim.SGD(model_ae.parameters(), lr = 0.0001, momentum=0.9)
@@ -77,7 +78,7 @@ if __name__=="__main__":
     model_discrim.to(device)
 
     # Training
-    if True:
+    if not args.test:
         f = open(name_exp+"/loss_"+name_exp+".txt","w+")
         f_recons = open(name_exp+"/recons_loss_"+name_exp+".txt","w+")
         f_ad = open(name_exp+"/ad_loss_"+name_exp+".txt","w+")
@@ -95,7 +96,7 @@ if __name__=="__main__":
             val_losses = []
 
             print("_____EPOCH: "+str(epoch+1)+'/'+str(max_epochs)+"_____")
-            for i, data in enumerate(training_generator,0):
+            for i, data in enumerate(generator,0):
                 local_batch, local_labels, local_probs = data[0].cuda(), data[1].cuda(), data[2].cuda()
                 local_labels = local_labels.view(local_labels.size()[0],1).float()
                 local_probs = local_probs.view(local_probs.size()[0],1).float()
@@ -155,4 +156,35 @@ if __name__=="__main__":
         f_recons.close()
         f_discrim.close()
         torch.save(model_discrim,name_exp+"/models/model_discrim_"+name_exp+".pt")
+    
+    #Testing
+    if args.test:
+        
+        print("test")
 
+        model_net       = torch.load(name_exp+"/models/model_ae_"+str(max_epochs-1)+".pt")
+
+        model_net.eval()
+        with torch.no_grad():
+            O_val = []
+            Z_val = []
+            ID_val = []
+            I_val = []
+            for i, data in enumerate(generator,0):
+                local_batch, local_labels, local_probs, id = data[0].cuda(), data[1].cuda(), data[2].cuda() , data[3]
+                local_labels = local_labels.view(local_labels.size()[0],1).float()
+                local_probs = local_probs.view(local_probs.size()[0],1).float()                
+                outputs, z, _ = model_net(local_batch,local_probs,local_labels,args.w[0])
+                O_val = O_val + outputs.tolist()
+                Z_val = Z_val + z.tolist()
+                ID_val = ID_val + list(id)
+                I_val = I_val + local_batch.tolist()
+
+            Z_val   = np.array(Z_val)
+            O_val   = np.array(O_val)
+            ID_val   = np.array(ID_val)
+
+            np.savetxt(name_exp+"/I_val.txt",I_val,fmt='%.6e')
+            np.savetxt(name_exp+"/O_val.txt",O_val,fmt='%.6e')
+            np.savetxt(name_exp+"/Z_val.txt",Z_val,fmt='%.6e')
+            np.savetxt(name_exp+"/ID_val.txt",ID_val,fmt='%s')

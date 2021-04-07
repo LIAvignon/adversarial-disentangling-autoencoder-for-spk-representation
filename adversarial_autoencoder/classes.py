@@ -16,10 +16,6 @@ import math
 from scipy import signal
 
 INPUT_SIZE      = 512               # Size of the x-vector
-L_attributes    = 1                 # Size of the attribute vector
-m0              = 0.18212125        # Two values of the categorical distribution for the attribute transformation
-m1              = 0.69516705        #
-
 
 class Dataset(data.Dataset):
 
@@ -64,15 +60,11 @@ class Autoencoder(nn.Module):
         x = x/torch.norm(x,dim=1).view(x.size()[0],1)                       # Output x-vector Length Normalisation
         return x
 
-    def forward(self, x, w,convert=False):
+    def forward(self, x, w, l, w='sr'):
         z = self.encode(x)
-        if convert==True:                                                   # Attribute transformation
-            w = 0.5 + 0.1*torch.randn(z.size()[0]).cuda()                   # Normal Distributiom
-            #attributes = torch.randint(0,2,(z.size()[0],)).float().cuda()   # Categorical Distribution
-            #attributes[attributes == 1] = m1                           
-            #attributes[attributes == 0] = m0
-            #attributes = torch.abs(1-attributes)                           # 1-\tilde{y}
-            w = w.reshape((z.size()[0],1))
+        if w!='sr':
+            w = float(w)*torch.ones(z.size()[0]).cuda()
+        w = w.reshape((z.size()[0],1))
         outputs = self.decode(z,w)
         return outputs, z, w
 
@@ -83,15 +75,11 @@ class Discrim(nn.Module):                                                   # Ad
         self.input_dim  = input_dim
         self.linear1 = torch.nn.Linear(input_dim,hidden_dim)
         self.linear2 = torch.nn.Linear(hidden_dim,1)
-        self.dropout1 = torch.nn.Dropout(0.3)
-        self.dropout2 = torch.nn.Dropout(0.3)
 
     def forward(self, x):
         att_pred = self.linear1(x)
-        att_pred = self.dropout1(att_pred)
         att_pred = F.relu(att_pred)
         att_pred = self.linear2(att_pred)
-        att_pred = self.dropout2(att_pred)
         att_pred = F.sigmoid(att_pred)
         return att_pred
 

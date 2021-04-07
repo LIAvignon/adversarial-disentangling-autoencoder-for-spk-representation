@@ -20,6 +20,7 @@ if __name__=="__main__":
     data_te = np.loadtxt(data_te)
 
     mu = np.mean(data_tr,axis=0)
+    print(mu)
     std_dev = np.std(data_tr,axis=0)
     std_dev[std_dev==0]=1
 

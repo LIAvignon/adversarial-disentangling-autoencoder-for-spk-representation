@@ -115,7 +115,7 @@ if __name__=="__main__":
         correct_1   = 0
         total_1     = 0
         with torch.no_grad():
-            for data in test_generator:
+            for data in training_generator:
                 local_batch, local_labels = data[0].cuda(), data[1].cuda()
                 local_labels = local_labels.view(local_labels.size()[0],1).float()
 
@@ -147,8 +147,6 @@ if __name__=="__main__":
         
         data = torch.Tensor(np.loadtxt(args.xvectors))
 
-        
-
         P = []
         with torch.no_grad():
             for i in range(data.size()[0]):
@@ -159,7 +157,8 @@ if __name__=="__main__":
 
         P = np.array(P)
         P = P.reshape(len(P))
-
+        print("Done")
+        
         np.savetxt(args.xvectors+".postprob",P)
-
+        print("Saved")
 
