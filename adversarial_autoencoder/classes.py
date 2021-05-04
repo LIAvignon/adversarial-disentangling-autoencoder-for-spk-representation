@@ -35,7 +35,7 @@ class Dataset(data.Dataset):
         ID  = self.list_IDs[index]                                      # Utterance Ids
         x   = self.data[index]                                          # x-vectors
         p   = self.prob[index]                                          # Soft labels
-        #x   = x/torch.norm(x)                                           # x-vector Length Normalisation
+        x   = x/torch.norm(x)                                           # x-vector Length Normalisation
         y   = self.labels[ID]                                           # Hard labels
         return x, y, p, ID
 
@@ -45,14 +45,13 @@ class Autoencoder(nn.Module):
         super(Autoencoder, self).__init__()
         self.input_dim  = input_dim
         self.linear1    = torch.nn.Linear(input_dim, latent_dim)
-        self.linear2    = torch.nn.Linear(latent_dim+L_attributes, input_dim)
-        self.bn1         = torch.nn.BatchNorm1d(num_features=latent_dim)
+        self.linear2    = torch.nn.Linear(latent_dim+1, input_dim)
+        self.bn1        = torch.nn.BatchNorm1d(num_features=latent_dim)
 
     def encode(self,x):                                                     # Encoder
         x = x/torch.norm(x,dim=1).view(x.size()[0],1)                       # x-vector Length Normalisation
         z = F.relu(self.linear1(x))
         z = self.bn1(z)
-        return z
 
     def decode(self, z, attributes):                                        # Conditional Decoder
         x = torch.cat((z,attributes),1)
@@ -60,10 +59,10 @@ class Autoencoder(nn.Module):
         x = x/torch.norm(x,dim=1).view(x.size()[0],1)                       # Output x-vector Length Normalisation
         return x
 
-    def forward(self, x, w, l, w='sr'):
+    def forward(self, x, w, o='sr'):
         z = self.encode(x)
-        if w!='sr':
-            w = float(w)*torch.ones(z.size()[0]).cuda()
+        if o!='sr':
+            w = float(o)*torch.ones(z.size()[0]).cuda()
         w = w.reshape((z.size()[0],1))
         outputs = self.decode(z,w)
         return outputs, z, w

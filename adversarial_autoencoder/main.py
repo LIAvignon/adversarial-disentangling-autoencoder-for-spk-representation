@@ -31,7 +31,7 @@ if __name__=="__main__":
     parser.add_argument('list_utt_id',help="list file of the utterances ID", type=str)
     parser.add_argument('att_labels_txt',help="Txt file containing all the spk id and the corresponding att label", type=str)
     parser.add_argument("-t", "--test", help="Testing forward",action="store_true")
-    parser.add_argument('-w', dest='w', type=str, nargs=1, default='sr', help='Transformation option for testing: w value. Default is sr for soft-reconstruction')   
+    parser.add_argument('-o', dest='o', type=str, nargs=1, help='Transformation Option for testing: w value.')   
     args = parser.parse_args()
 
     data_file       = args.xvectors
@@ -174,7 +174,7 @@ if __name__=="__main__":
                 local_batch, local_labels, local_probs, id = data[0].cuda(), data[1].cuda(), data[2].cuda() , data[3]
                 local_labels = local_labels.view(local_labels.size()[0],1).float()
                 local_probs = local_probs.view(local_probs.size()[0],1).float()                
-                outputs, z, _ = model_net(local_batch,local_probs,local_labels,args.w[0])
+                outputs, z, _ = model_net(local_batch,local_probs,args.o[0])
                 O_val = O_val + outputs.tolist()
                 Z_val = Z_val + z.tolist()
                 ID_val = ID_val + list(id)
