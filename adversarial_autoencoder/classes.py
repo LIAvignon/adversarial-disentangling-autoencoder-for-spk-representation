@@ -52,6 +52,7 @@ class Autoencoder(nn.Module):
         x = x/torch.norm(x,dim=1).view(x.size()[0],1)                       # x-vector Length Normalisation
         z = F.relu(self.linear1(x))
         z = self.bn1(z)
+        return z
 
     def decode(self, z, attributes):                                        # Conditional Decoder
         x = torch.cat((z,attributes),1)
